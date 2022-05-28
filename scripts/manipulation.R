@@ -55,25 +55,39 @@ sum(is.na(df1$edu_sec)) - sum(is.na(df1$edu_sec2)) # retrieved over 100k observa
 df1$edu_sec <- df1$edu_sec2
 df1$edu_sec2 <- NULL
 
-df1 <- df1 %>% group_by(pid) %>% mutate(birthregion2 = replace_na(birthregion, d = NA)) # replace NA with previous value
-sum(is.na(df1$birthregion)) - sum(is.na(df1$birthregion2)) # retrieved 0 observations
-df1$birthregion2 <- NULL
+#df1 <- df1 %>% group_by(pid) %>% mutate(birthregion2 = replace_na(birthregion, d = NA)) # replace NA with previous value
+#sum(is.na(df1$birthregion)) - sum(is.na(df1$birthregion2)) # retrieved 0 observations
+#df1$birthregion2 <- NULL
 
-df1 <- df1 %>% group_by(pid) %>% mutate(gebjahr2 = max(gebjahr)) # replace NA with individual maximum
-sum(is.na(df1$gebjahr)) - sum(is.na(df1$gebjahr2)) # retrieved 0 observations
-df1$gebjahr2 <- NULL
+#df1 <- df1 %>% group_by(pid) %>% mutate(gebjahr2 = max(gebjahr)) # replace NA with individual maximum
+#sum(is.na(df1$gebjahr)) - sum(is.na(df1$gebjahr2)) # retrieved 0 observations
+#df1$gebjahr2 <- NULL
 
-df1 <- df1 %>% group_by(pid) %>% mutate(gebmonat2 = max(gebmonat)) # replace NA with individual maximum
-sum(is.na(df1$gebmonat)) - sum(is.na(df1$gebmonat2)) # retrieved 0 observations
-df1$gebmonat2 <- NULL
+#df1 <- df1 %>% group_by(pid) %>% mutate(gebmonat2 = max(gebmonat)) # replace NA with individual maximum
+#sum(is.na(df1$gebmonat)) - sum(is.na(df1$gebmonat2)) # retrieved 0 observations
+#df1$gebmonat2 <- NULL
 
-df1 <- df1 %>% group_by(pid) %>% mutate(sex2 = max(sex)) # replace NA with individual maximum
-sum(is.na(df1$sex)) - sum(is.na(df1$sex2)) # retrieved 0 observations
-df1$gebmonat2 <- NULL
+#df1 <- df1 %>% group_by(pid) %>% mutate(sex2 = max(sex)) # replace NA with individual maximum
+#sum(is.na(df1$sex)) - sum(is.na(df1$sex2)) # retrieved 0 observations
+#df1$gebmonat2 <- NULL
+
+
+## change wages to real wages (2010 base year) with OECD CPI
+url <- "https://stats.oecd.org/restsdmx/sdmx.ashx/GetData/PRICES_CPI/DEU.CPALTT01.IXOBSA.A/all?startTime=2005&endTime=2022"
+dfCPI <- as.data.frame(readSDMX(url)) # read in German inflation data (date last updated: May 2022)
+dfCPI <- dfCPI[,c(9,10)]
+names(dfCPI) <- c("year", "CPI")
+dfCPI$CPI <- dfCPI$CPI / dfCPI[dfCPI$year == 2010, 2] # change ref year from 2015 to 2010
+df1 <- merge(df1, dfCPI, by.x = "syear", by.y = "year", all.x = TRUE)
+df1$inc <- df1$inc / df1$CPI 
+df1$inc2 <- df1$inc2 / df1$CPI 
+df1$CPI <- NULL
+dfCPI <- NULL
+url <- NULL
 
 
 ## apply sample restrictions
-df1 <- df1[which(df1$gebjahr %in% c(1984:2001) & df1$syear >= 2005),] # cohorts affected
+df1 <- df1[which(df1$gebjahr > 1984 & df1$syear >= 2005),] # cohorts affected
 df1 <- df1[which(!is.na(df1$edu_sec) & df1$edu_sec == 4),] # only Abitur
 df1 <- df1[which(df1$birthregion != 6),] # drop Hesse
 df1 <- df1[which(!is.na(df1$sampreg)),] # drop no current state
@@ -86,6 +100,7 @@ df1$empl <- ifelse(df1$empl1 %in% c(1,2), 1, ifelse(is.na(df1$empl1) == T, NA, 0
 df1$fullt <- ifelse(df1$empl1 == 1, 1, ifelse(is.na(df1$empl1) == T, NA, 0))
 df1$partt <- ifelse(df1$empl1 == 2, 1, ifelse(is.na(df1$empl1) == T, NA, 0))
 df1$edu_cur <- ifelse(df1$empl1 == 3, 1, ifelse(is.na(df1$empl1) == T, NA, 0))
+df1$mig <- ifelse(df1$migback %in% c(2,3), 1, 0)
 df1$one <- 1 # later needed for counting operations
 
 
@@ -99,7 +114,7 @@ df1$one <- 1 # later needed for counting operations
 ## treatment variables
 
 # first graduation cohorts by older birth-year (at graduation year with short HS you either turn 18 or 19) (omitting HE with 2012-2014)
-first_cohort_values <- c(2016,2013,2011,2012,2013,9999,2012,2011,2009,2012,2012,2008,1949,2007,1949) - 19
+first_cohort_values <- c(2016,2010,2011,2012,2013,9999,2012,2011,2009,2012,2012,2008,1949,2007,1949) - 19
 dfbl <- data.frame(state_nr = c(1:5,7:16), first_cohort = first_cohort_values, 
                    state = c("SH", "HH", "NI", "HB", "NW", "RP", "BW", "BY",
                              "SL", "BE", "BB", "MV", "SA", "ST", "TH"))
@@ -147,6 +162,11 @@ statesC2011 <- setdiff(states, statesT2011)
 statesC2012 <- setdiff(states, statesT2012)
 statescore2011 <- c("BW", "BY", "BE", "BB", "HB", "HH", "NI", "NW", "RP", "SH")
 statescore2012 <- c("BW", "BE", "BB", "HB", "HH", "NW", "RP", "SH")
+states2011 <- c("BY", "NI")
+states2012 <- c("BW", "BE", "BB", "HB")
+states2013 <- c("NW")
+statesReg2 <- union(states2011,union(states2012,states2013))
+
 
 # dummies on whether observation is in 2011 or 2012 did (there is an overlap, so I define two dummies)
 df1$did2011 <- ifelse(
@@ -168,20 +188,43 @@ df1$txc2011 <- ifelse(df1$state %in% statesT2011, paste0(df1$grad_cohort,"T"),
 df1$txc2012 <- ifelse(df1$state %in% statesT2012, paste0(df1$grad_cohort,"T"), 
                       paste0(df1$grad_cohort,"C"))
 
+# dummy whether part of reg2 in cohort X
+df1$reg <- ifelse(df1$grad_cohort == 2011 & df1$state %in% states2011, 2011, 
+                   ifelse(df1$grad_cohort == 2012 & df1$state %in% states2012,2012,  
+                          ifelse(df1$grad_cohort == 2013 & df1$state %in% states2013, 2013, NA)))
+
+# dummy whether part of reg2 parallel trend comparison group
+df1$regp2011 <- ifelse(df1$grad_cohort %in% c(2008:2011) & df1$state %in% states2011 & df1$t_1 == 0, 1, NA)
+df1$regp2012 <- ifelse(df1$grad_cohort %in% c(2009:2012) & df1$state %in% states2012 & df1$t_1 == 0, 1, NA)
+df1$regp2013 <- ifelse(df1$grad_cohort %in% c(2010:2013) & df1$state %in% states2013 & df1$t_1 == 0, 1, NA)
+
 # dummy "core" regression (only just-treated)
-df1$core <- ifelse((df1$state %in% statescore2011 & df1$did2011 == 1) | 
-                   (df1$state %in% statescore2012 & df1$did2012 == 1), 1, 0)
+#df1$core <- ifelse((df1$state %in% statescore2011 & df1$did2011 == 1) | 
+#                   (df1$state %in% statescore2012 & df1$did2012 == 1), 1, 0)
+
+# weight
+df1$wght <- df1$phrf
+df1$phrf <- NULL
 
 # subset to main data frame
-dfmain <- df1[df1$years_grad %in% c(1:8) & (df1$did2011 == 1 | df1$did2012 == 1),] 
+#dfmain <- df1[which(df1$years_grad %in% c(1:8) & (df1$did2011 == 1 | df1$did2012 == 1)),] 
+dfmain <- df1[which(!is.na(df1$reg) & df1$years_grad %in% c(1:9) & 
+                      !is.na(df1$unempl) & !is.na(df1$empl) & !is.na(df1$health) & 
+                      !is.na(df1$lifesat) & !is.na(df1$fullt)),]
+dfmainp2011 <- df1[which(df1$regp2011 == 1 & df1$years_grad > 0),]
+dfmainp2012 <- df1[which(df1$regp2012 == 1 & df1$years_grad > 0),]
+dfmainp2013 <- df1[which(df1$regp2013 == 1 & df1$years_grad > 0),]
 
 
-## set invironment to non-github to save files
+## set environment to non-github to save files
 i_am("GitHub/lse-msc-thesis/scripts/manipulation.R")
 
 
 ## safe output
 save(dfmain, file = here("SOEP/msc-thesis/dfmain.Rda"))
+save(dfmainp2011, file = here("SOEP/msc-thesis/dfmainp2011.Rda"))
+save(dfmainp2012, file = here("SOEP/msc-thesis/dfmainp2012.Rda"))
+save(dfmainp2013, file = here("SOEP/msc-thesis/dfmainp2013.Rda"))
 save(df1, file = here("SOEP/msc-thesis/df1.Rda"))
 
 
