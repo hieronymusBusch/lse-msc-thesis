@@ -25,6 +25,9 @@ library(bacondecomp)
 library(lfe)
 library(plm)
 library(rsdmx)
+library(survival)
+library(sandwich)
+
 
 # tidyverse
 library(tidyr)

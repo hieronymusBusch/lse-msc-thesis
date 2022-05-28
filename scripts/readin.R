@@ -39,8 +39,8 @@ df <- merge(df, df1, by = c("pid", "syear"), all = TRUE)
 ## another data set of generated variables 
 df1 <- read_dta(here::here("SOEP/2020/pequiv.dta"), 
                 col_select =  c("pid", "syear", "p11101", "d11109", "m11126", "i11110", 
-                                "e11102", "house", "e11101"))
-colnames(df1) <- c("pid","syear","edu_ys","hours1","empl2","housing","inc2","health","lifesat")
+                                "e11102", "house", "e11101", "l11101"))
+colnames(df1) <- c("pid","syear","edu_ys","hours1","empl2","housing","inc2","cur_state","health","lifesat")
 df1 <- df1[df1$syear > 2000,]
 df <- merge(df, df1, by = c("pid", "syear"), all = TRUE)
 df1 <- NULL

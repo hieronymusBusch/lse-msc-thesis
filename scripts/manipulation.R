@@ -16,6 +16,7 @@
 # empl : employment status, 0 = not employed, 1 = employed
 # house : housing benefits, continuous
 # hours : annual working hours
+# cur_state: current state (numeric coded)
 
 
 #### Education Variables
@@ -55,6 +56,8 @@ sum(is.na(df1$edu_sec)) - sum(is.na(df1$edu_sec2)) # retrieved over 100k observa
 df1$edu_sec <- df1$edu_sec2
 df1$edu_sec2 <- NULL
 
+## uncomment to use, but no obs retrieved (so left out to enhance speed)
+
 #df1 <- df1 %>% group_by(pid) %>% mutate(birthregion2 = replace_na(birthregion, d = NA)) # replace NA with previous value
 #sum(is.na(df1$birthregion)) - sum(is.na(df1$birthregion2)) # retrieved 0 observations
 #df1$birthregion2 <- NULL
@@ -90,7 +93,6 @@ url <- NULL
 df1 <- df1[which(df1$gebjahr > 1984 & df1$syear >= 2005),] # cohorts affected
 df1 <- df1[which(!is.na(df1$edu_sec) & df1$edu_sec == 4),] # only Abitur
 df1 <- df1[which(df1$birthregion != 6),] # drop Hesse
-df1 <- df1[which(!is.na(df1$sampreg)),] # drop no current state
 
 
 ## create vars
@@ -137,21 +139,6 @@ df1$inc <- ifelse(df1$inc < 0, NA, ifelse(df1$inc == 0, 1, df1$inc)) # change ze
 df1$inc2 <- ifelse(df1$inc2 < 0, NA, ifelse(df1$inc2 == 0, 1, df1$inc2)) # change zeros in income to 1 ct (for logs)
 df1$linc <- log(df1$inc) # set no income to 1 ct before logging
 df1$linc2 <- log(df1$inc2) # set no income to 1 ct before logging
-
-
-
-# first cohort assignment: state at age 17
-#dfbl <- data.frame(state_nr = c(1:16), first_cohort = c(2016,2013,2011,2012,2013,2013,9999,
-#                                                   2012,2011,2009,2012,2012,2008,9999,2007,9999))
-#df2 <- df1[df1$age == 17, c("pid", "sampreg")]
-#df2 <- merge(df2, dfbl, by.x = "sampreg", by.y = "state_nr", all.x = T)
-#df2$sampreg <- NULL
-#df1 <- merge(df1, df2, "pid", all.x = T)
-#
-#df1$t_2 <- ifelse(df1$cohort >= df1$first_cohort, 1, 0) # if yes = short high school SHS
-#df1$tc_2 <- ifelse(df1$t_1 == 1, df1$syear - df1$cohort, 0) # if SHS, how many years after graduation? 
-
-#df1$first_cohort <- NULL
 
 
 ## restricted samples for regressions

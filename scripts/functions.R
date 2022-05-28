@@ -10,39 +10,47 @@
 
 # calculates for a list of data frames and a given variable two panel models (varying in controls)
 # and gives out a stargazer table 
-panel_table <- function(list_df, var, class){
+panel_table <- function(list_df, var, class, out = "latex"){
   # create empty data frame
   df_all <- data.frame(Data = character(), Variable = character(), c1 = numeric(), c2 = numeric())
-  # run loop that runs for each data frame two panel models, 
-  for(df in list_df){
+  # run loop that runs for each data frame two panel models, and combine output in data frame defined above
+  a <- length(list_df)
+  list_cohorts <- c("Cohort = all", "Cohort = 2011", "Cohort = 2012", "Cohort = 2013")
+  for(i in 1:a){
+    df <- list_df[[i]]
     df <- df[df$years_grad < 8, ]
-    
+    # if continous, only use estimate and standard error
     if(class == "cont"){
       fe_1 <- round(summary(felm(df[, var] ~ t_1xyears | years_grad + pid | 0 | pid, 
                                  df))$coefficients[1,c(1,2)], 2)
-      fe_2 <- round(summary(felm(df[, var] ~ t_1xyears | years_grad + pid + syear + sampreg | 0 | pid, 
+      fe_2 <- round(summary(felm(df[, var] ~ t_1xyears | years_grad + pid + syear + cur_state | 0 | pid, 
                                  df))$coefficients[1,c(1,2)], 2)
-    }else{
-      fe_1 <- round(summary(felm(df[, var] ~ t_1xyears | years_grad + pid | 0 | pid, 
-                                 df))$coefficients[1,c(1,2)], 2)
-      fe_2 <- round(summary(felm(df[, var] ~ t_1xyears | years_grad + pid + syear + sampreg | 0 | pid, 
-                                 df))$coefficients[1,c(1,2)], 2)
+      df1 <- data.frame(Data = c(list_cohorts[i], paste0("N = ", sum(df$one))), 
+                        c1 = c(as.numeric(fe_1[1]), paste0("(", paste0(as.numeric(fe_1[2]),")"))),
+                        c2 = c(as.numeric(fe_2[1]), paste0("(", paste0(as.numeric(fe_2[3]),")"))) 
+      )
+    }else{ # logit case (use conditional logit model from survival package with same cases / controls)
+      fe_1 <- round(summary(clogit(df[, var] ~ t_1xyears + factor(years_grad) + strata(pid), 
+                                   df))$coefficients[1,c(1,2,3)], 2)
+      fe_2 <- round(summary(clogit(df[, var] ~ t_1xyears + factor(years_grad) + strata(pid)
+                                   + factor(syear) + factor(cur_state), 
+                                   df))$coefficients[1,c(1,2,3)], 2)
+      df1 <- data.frame(Data = c(list_cohorts[i], paste0("N = ", sum(df$one)), ""), 
+                        c1 = c(as.numeric(fe_1[2]), as.numeric(fe_1[1]), 
+                               paste0("(", paste0(as.numeric(fe_1[3]),")"))),
+                        c2 = c(as.numeric(fe_2[2]), as.numeric(fe_2[1]), 
+                               paste0("(", paste0(as.numeric(fe_2[3]),")"))) 
+      )
     }
-    
-    #fe_1 <- round(summary(felm(df[, var] ~ t_1xyears | years_grad + pid | 0 | pid, 
-    #                           df))$coefficients[1,c(1,2)], 2)
-    #fe_2 <- round(summary(felm(df[, var] ~ t_1xyears | years_grad + pid + syear + sampreg | 0 | pid, 
-    #                           df))$coefficients[1,c(1,2)], 2)
-    
-    df1 <- data.frame(Data = c("Cohort = 2011", paste0("N = ", sum(df$one))), 
-                      Variable = c("Short HS * Years", " "), 
-                      c1 = c(as.numeric(fe_1[1]), paste0("(", paste0(as.numeric(fe_1[2]),")"))),
-                      c1 = c(as.numeric(fe_2[1]), paste0("(", paste0(as.numeric(fe_2[2]),")"))))
-    
     df_all <- rbind(df_all, df1)
   }
-  names(df_all) <- c("Data", "Variable", "(1)", "(2)")
-  stargazer(df_all, type = "latex", summary = FALSE)
+  names(df_all) <- c("Data", "(1)", "(2)")
+  # stargazer direct or data frame
+  if(out == "latex"){
+    stargazer(df_all, type = "latex", summary = FALSE)
+  }else{
+    df_all
+  }
 }
 
 # plot treatment coefficient +- standard error
@@ -51,7 +59,7 @@ cross_section_plot <- function(data = dfmain, var, ylab, scale, class){
   # create data frame of estimates (and standard errors)
   for(i in 1:7){
     dfyear <- data[data$years_grad == i, ]
-    model <- paste0(var, " ~ t_1 + factor(state) + sex + mig + gebjahr + sampreg")
+    model <- paste0(var, " ~ t_1 + factor(state) + sex + mig + gebjahr + factor(cur_state)")
     if(class == "cont"){
       effect <- as.data.frame(t(summary(lm(model, dfyear))$coefficients[2,c(2,1)]))
     }else{
@@ -104,7 +112,7 @@ cross_section_plot3 <- function(data = dfmain, var, ylab, scale_est, scale_per, 
   df <- data.frame("Std. Error" = numeric(), "Estimate" = numeric(), "Year" = numeric())
   for(i in 1:7){
     dfyear <- data[data$years_grad == i, ]
-    model <- paste0(var, " ~ t_1 + factor(state) + sex + mig + gebjahr + sampreg")
+    model <- paste0(var, " ~ t_1 + factor(state) + sex + mig + gebjahr + factor(cur_state)")
     effect <- as.data.frame(t(summary(glm(model, family = binomial, dfyear))$coefficients[2,c(2,1)]))
     effect$Year <- i
     df <- rbind(df, effect)
