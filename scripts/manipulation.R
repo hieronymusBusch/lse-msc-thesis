@@ -188,6 +188,9 @@ df1$txc2011 <- ifelse(df1$state %in% statesT2011, paste0(df1$grad_cohort,"T"),
 df1$txc2012 <- ifelse(df1$state %in% statesT2012, paste0(df1$grad_cohort,"T"), 
                       paste0(df1$grad_cohort,"C"))
 
+# treatment x years since graduation
+df1$t_1xyears <- df1$t_1 * df1$years_grad
+
 # dummy whether part of reg2 in cohort X
 df1$reg <- ifelse(df1$grad_cohort == 2011 & df1$state %in% states2011, 2011, 
                    ifelse(df1$grad_cohort == 2012 & df1$state %in% states2012,2012,  

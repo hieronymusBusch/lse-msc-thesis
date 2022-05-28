@@ -15,9 +15,16 @@ here::i_am("scripts/analysis_regressions2.R")
 
 ## read in data directly
 source(here::here("scripts/setup.R")) 
+
+# comp 1
 i_am("GitHub/lse-msc-thesis/scripts/analysis_regressions2.R")
 load(here("SOEP/msc-thesis/dfmain.Rda"))
 load(here("SOEP/msc-thesis/df1.Rda"))  
+
+# comp 2
+i_am("GitHub/lse-msc-thesis/scripts/analysis_regressions2.R")
+load(here("SOEP/dfmain.Rda"))
+
 here::i_am("scripts/analysis_regressions2.R") 
 
 
@@ -61,15 +68,17 @@ ggsave(here::here("plots/figure_cross_empl2.pdf"), width = 14.2, height = 13.4, 
 
 list_df <- list(dfmain, dfmain_2011, dfmain_2012, dfmain_2013)
 
-
-
 panel_table(list_df, "linc")
 
 
+## testing serial correlation in panel
+model <- plm(linc ~ t_1xyears + factor(syear) + factor(birthregion), effect = "twoways",
+             data=dfmain, model="within", index = c("pid", "years_grad"))
+summary(model)
+pwartest(model)
 
 
-
-
+table(index(dfmain), useNA = "ifany")
 
 
 
