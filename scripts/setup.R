@@ -1,8 +1,6 @@
 ##########################################################
 #                                                        #
-# 2022/04                                                #
-#                                                        #
-# Alexander Busch (a.busch@lse.ac.uk)                    #
+# 2022/05                                                #
 #                                                        #
 # Setup                                                  #
 #                                                        #
@@ -17,16 +15,13 @@ library(stargazer)
 library(ggthemes)
 library(haven)
 
-library(multiwayvcov)
+library(sf)
 library(lmtest) 
-library(staggered) 
-library(did2s)
 library(bacondecomp)
 library(lfe)
 library(plm)
 library(rsdmx)
 library(survival)
-library(sandwich)
 
 
 # tidyverse

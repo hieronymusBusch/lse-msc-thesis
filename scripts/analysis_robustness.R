@@ -1,8 +1,6 @@
 ##########################################################
 #                                                        #
-# 2022/04                                                #
-#                                                        #
-# Alexander Busch (a.busch@lse.ac.uk)                    #
+# 2022/05                                                #
 #                                                        #
 # Data Analysis - Robustness Checks                      #
 #                                                        #
@@ -34,8 +32,6 @@ here::i_am("scripts/analysis_robustness.R")
 
 ### Spillover / Validity of first cohort checks
 
-
-## DD Spillover Check
 states2011 <- c("BY", "NI")
 states2012 <- c("BW", "BE", "BB", "HB")
 states2013 <- c("NW")

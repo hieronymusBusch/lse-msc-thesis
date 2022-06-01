@@ -1,8 +1,6 @@
 ##########################################################
 #                                                        #
-# 2022/04                                                #
-#                                                        #
-# Alexander Busch (a.busch@lse.ac.uk)                    #
+# 2022/05                                                #
 #                                                        #
 # Data Analysis - Descriptives                           #
 #                                                        #
@@ -11,25 +9,21 @@
 here::i_am("scripts/analysis_descriptive.R")
 
 ## read in data frames & manipulate
-source(here::here("scripts/manipulation.R")) 
+#source(here::here("scripts/manipulation.R")) 
 
 ## read in data directly
 source(here::here("scripts/setup.R")) 
-i_am("GitHub/lse-msc-thesis/scripts/analysis_descriptive.R")
-load("SOEP/msc-thesis/dfmain.Rda")
-load("SOEP/msc-thesis/df1.Rda")  
+i_am("GitHub/lse-msc-thesis/scripts/analysis_descriptive2.R")
+load(here::here("SOEP/msc-thesis/dfmain.Rda"))
+load(here::here("SOEP/msc-thesis/dfmainp2011.Rda"))
+load(here::here("SOEP/msc-thesis/dfmainp2012.Rda"))
+load(here::here("SOEP/msc-thesis/dfmainp2013.Rda"))
+load(here::here("SOEP/msc-thesis/df1.Rda"))
 here::i_am("scripts/analysis_descriptive.R")
 
 
 
 #### Observation Count 
-
-# unique observations (per pid)
-dfmain_i <- dfmain[!duplicated(dfmain$pid),]
-table(dfmain_i$birth_cohort, dfmain_i$t_1)
-table(dfmain$birth_cohort, dfmain$syear)
-table(dfmain$state)
-table(dfmain_i$state)
 
 
 # how many obs per individual? 
@@ -43,17 +37,18 @@ table(dfmain$count_miss, dfmain$birth_cohort)
 table(dfmain$birth_cohort)
 # many with several missings, but rather high average of 6 obs for the max 8 year period! 
 
-# table for paper: 
+
+## table for paper: 
 # years_grad | total obs | 2011 treated | 2011 control | 2012 treated | 2012 control
 
 dfmain2011 <- dfmain[dfmain$reg == 2011,]
 tab1 <- table(dfmain2011$years_grad, dfmain2011$t_1)
-tab1 <- cbind(c(1:9),tab1)
+tab1 <- cbind(c(1:7),tab1)
 tab1 <- as.data.frame(tab1)
 
 dfmain2012 <- dfmain[dfmain$reg == 2012,]
 tab2 <- table(dfmain2012$years_grad, dfmain2012$t_1)
-tab2 <- cbind(c(1:8),tab2)
+tab2 <- cbind(c(1:7),tab2)
 tab2 <- as.data.frame(tab2)
 
 dfmain2013 <- dfmain[dfmain$reg == 2013,]
@@ -64,7 +59,7 @@ tab3 <- as.data.frame(tab3)
 tab <- merge(tab1, merge(tab2, tab3, by = "V1", all = T), by = "V1", all = T)
 tab$obs <- rowSums(tab, na.rm = T) - tab$V1
 colnames(tab) <- c("years", "2011 C", "2011 T", "2012 C", "2012 T", "2013 C", "2013 T", "Total")
-tab[10, ] <- colSums(tab, na.rm = T)
+tab[8, ] <- colSums(tab, na.rm = T)
 rownames(tab) <- NULL
 
 # output as table for latex
@@ -75,84 +70,99 @@ stargazer(tab, summary = FALSE, type = "latex")
 ### Parallel Trend assumptions
 
 
-## 2011
-dfmain2011_avg <- ddply(dfmain2011[which(!is.na(dfmainp2011$linc)),], 
-                         .(grad_cohort, years_grad), summarise, linc_mean=mean(linc), N=sum(one))
-dfmainp2011_avg$grad_cohort <- as.factor(dfmainp2011_avg$grad_cohort)
+## log income
 
-# plot
-ggplot(data=dfmainp2011_avg, aes(x=years_grad, y=linc_mean)) +
-  geom_point(aes(x=years_grad, y=linc_mean, col = grad_cohort, shape = grad_cohort, fill = grad_cohort)) +
-  geom_line(aes(x=years_grad, y=linc_mean, col = grad_cohort), size = 0.75) + 
-  labs(y="Log monthly income", x="Experience") +
-  scale_x_continuous(limits = c(0,13.5), expand = c(0,0), breaks = c(1,3,5,7,9,11,13)) +
-  scale_y_continuous(limits = c(0,9.5), expand = c(0,0), breaks = c(1,3,5,7,9)) +
-  scale_fill_manual(values = c("#CCCCCC", "#999999", "#666666", "#000000")) + # color interior
-  scale_color_manual(values = c("#CCCCCC", "#999999", "#666666", "#000000")) + # color exterior
-  theme_tufte() + 
-  theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
-        legend.position = "bottom", legend.title = element_blank())
-ggsave(here::here("plots/figure_parallel_2011.pdf"), width = 14.2, height = 13.4, units = "cm")
+# 2011
+parallel_trends(data = dfmainp2011, variable = "linc", ylab = "Log monthly income", scale = 9)
+ggsave(here::here("plots/figure_parallel_linc_2011.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2012
+parallel_trends(data = dfmainp2012, variable = "linc", ylab = "Log monthly income", scale = 9)
+ggsave(here::here("plots/figure_parallel_linc_2012.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2013
+parallel_trends(data = dfmainp2013, variable = "linc", ylab = "Log monthly income", scale = 9)
+ggsave(here::here("plots/figure_parallel_linc_2013.pdf"), width = 14.2, height = 13.4, units = "cm")
 
 
-## 2012
-dfmainp2012_avg <- ddply(dfmainp2012[which(!is.na(dfmainp2012$linc)),], 
-                         .(grad_cohort, years_grad), summarise, linc_mean=mean(linc), N=sum(one))
-dfmainp2012_avg$grad_cohort <- as.factor(dfmainp2012_avg$grad_cohort)
+## health
 
-# plot
-ggplot(data=dfmainp2012_avg, aes(x=years_grad, y=linc_mean)) +
-  geom_point(aes(x=years_grad, y=linc_mean, col = grad_cohort, shape = grad_cohort, fill = grad_cohort)) +
-  geom_line(aes(x=years_grad, y=linc_mean, col = grad_cohort), size = 0.75) + 
-  labs(y="Log monthly income", x="Experience") +
-  scale_x_continuous(limits = c(0,12.5), expand = c(0,0), breaks = c(1,3,5,7,9,11)) +
-  scale_y_continuous(limits = c(0,9.5), expand = c(0,0), breaks = c(1,3,5,7,9)) +
-  scale_fill_manual(values = c("#CCCCCC", "#999999", "#666666", "#000000")) + # color interior
-  scale_color_manual(values = c("#CCCCCC", "#999999", "#666666", "#000000")) + # color exterior
-  theme_tufte() + 
-  theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
-        legend.position = "bottom", legend.title = element_blank())
-ggsave(here::here("plots/figure_parallel_2012.pdf"), width = 14.2, height = 13.4, units = "cm")
+# 2011
+parallel_trends(data = dfmainp2011, variable = "health", ylab = "Health self-assessment, 1 to 5", scale = 5)
+ggsave(here::here("plots/figure_parallel_health_2011.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2012
+parallel_trends(data = dfmainp2012, variable = "health", ylab = "Health self-assessment, 1 to 5", scale = 5)
+ggsave(here::here("plots/figure_parallel_health_2012.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2013
+parallel_trends(data = dfmainp2013, variable = "health", ylab = "Health self-assessment, 1 to 5", scale = 5)
+ggsave(here::here("plots/figure_parallel_health_2013.pdf"), width = 14.2, height = 13.4, units = "cm")
 
 
-## 2013
-dfmainp2013_avg <- ddply(dfmainp2013[which(!is.na(dfmainp2013$linc)),], 
-                         .(grad_cohort, years_grad), summarise, linc_mean=mean(linc), N=sum(one))
-dfmainp2013_avg$grad_cohort <- as.factor(dfmainp2013_avg$grad_cohort)
+## life satisfaction
 
-# plot
-ggplot(data=dfmainp2013_avg, aes(x=years_grad, y=linc_mean)) +
-  geom_point(aes(x=years_grad, y=linc_mean, col = grad_cohort, shape = grad_cohort, fill = grad_cohort)) +
-  geom_line(aes(x=years_grad, y=linc_mean, col = grad_cohort), size = 0.75) + 
-  labs(y="Log monthly income", x="Experience") +
-  scale_x_continuous(limits = c(0,11.5), expand = c(0,0), breaks = c(1,3,5,7,9,11)) +
-  scale_y_continuous(limits = c(0,9.5), expand = c(0,0), breaks = c(1,3,5,7,9)) +
-  scale_fill_manual(values = c("#CCCCCC", "#999999", "#666666", "#000000")) + # color interior
-  scale_color_manual(values = c("#CCCCCC", "#999999", "#666666", "#000000")) + # color exterior
-  theme_tufte() + 
-  theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
-        legend.position = "bottom", legend.title = element_blank())
-ggsave(here::here("plots/figure_parallel_2013.pdf"), width = 14.2, height = 13.4, units = "cm")
+# 2011
+parallel_trends(data = dfmainp2011, variable = "lifesat", ylab = "Life satisfaction, 0 to 10", scale = 10)
+ggsave(here::here("plots/figure_parallel_lifesat_2011.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2012
+parallel_trends(data = dfmainp2012, variable = "lifesat", ylab = "Life satisfaction, 0 to 10", scale = 10)
+ggsave(here::here("plots/figure_parallel_lifesat_2012.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2013
+parallel_trends(data = dfmainp2013, variable = "lifesat", ylab = "Life satisfaction, 0 to 10", scale = 10)
+ggsave(here::here("plots/figure_parallel_lifesat_2013.pdf"), width = 14.2, height = 13.4, units = "cm")
 
 
 
 ### summary statistics
-# interesting stats: time invariant, then compare only actual persons
-# sex, gebjahr, migback
+# sex, gebjahr, migback, ...
 
-dfmain_sum <- dfmain[, c("sex", "migback", "unempl", "t_1", "inc", "health", "lifesat", "edu_cur", 
-                         "fullt", "empl")]
-colnames(dfmain_sum) <- c("gender", "migration", "unemployment", "t_1", "monthly income", "self-rated health", 
-                          "life satisfaction", "curr. in education", "full time", "in labour force")
-dfmain_sum1 <- dfmain_sum[dfmain_sum$t_1 == 1,]
-dfmain_sum2 <- dfmain_sum[dfmain_sum$t_1 == 0,]
+dfmain_sum <- dfmain[, c("sex", "mig", "t_1", "linc", "health", "lifesat", "edu_cur", 
+                         "fullt", "empl", "hours3")]
+colnames(dfmain_sum) <- c("gender", "migration", "t_1", "log monthly income", "self-rated health", 
+                          "life satisfaction", "curr. in education", "full time", "employed", "ann. hours")
+dfmain_sum1 <- dfmain_sum[which(dfmain_sum$t_1 == 1),]
+dfmain_sum2 <- dfmain_sum[which(dfmain_sum$t_1 == 0),]
 
-
-stargazer(dfmain_sum1, dfmain_sum2, summary = TRUE, 
-          omit.summary.stat = c("max","min"), out = 'tab.txt')
+stargazer(dfmain_sum1, dfmain_sum2, summary = TRUE, omit.summary.stat = c("max","min"), type = "latex", digits = 2)
 
 
 
+### Germany Map
+
+dfsp <- st_read("data/shapefiles/250_NUTS1.shp")
+dfsp <- dfsp[-c(17:22),] # delete water / oecean 
+
+dfbl <- data.frame(first_cohort = c(2016,2010,2011,2012,2013,2013,9999,2012,2011,2009,
+                                    2012,2012,2008,1949,2007,1949), 
+                   study = c("other years", "other years", "2011", "2012", "2013", "other years", "other years", "2012", "2011", 
+                             "other years", "2012", "2012", "other years", "other years", "other years", "other years"),
+                   state = c("SH", "HH", "NI", "HB", "NW", "HE", "RP", "BW", "BY",
+                             "SL", "BE", "BB", "MV", "SA", "ST", "TH"), 
+                   NUTS_NAME = c("Schleswig-Holstein", "Hamburg", "Niedersachsen", 
+                                  "Bremen", "Nordrhein-Westfalen", "Hessen", 
+                                  "Rheinland-Pfalz", "Baden-Württemberg", "Bayern", 
+                                  "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern", 
+                                  "Sachsen", "Sachsen-Anhalt", "Thüringen"))
+dfsp <- merge(dfsp, dfbl, by = "NUTS_NAME")
+
+# map for sample
+ggplot(data = dfsp) +
+  geom_sf(aes(alpha=study, fill=study)) +
+  scale_fill_manual(values = c("#999999", "#666666", "#333333", "white")) +
+  scale_alpha_manual(values=c(1,1,1,0)) +
+  theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
+        legend.position = "bottom", legend.title = element_blank())
+ggsave(here::here("plots/map_sample.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# map for introduction
+ggplot(data = dfsp) +
+  geom_sf(aes(fill=first_cohort)) +
+  scale_fill_manual(values = c("#999999", "#666666", "#333333", "white")) +
+  theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
+        legend.position = "bottom", legend.title = element_blank())
 
 
 
@@ -162,18 +172,3 @@ stargazer(dfmain_sum1, dfmain_sum2, summary = TRUE,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  
-  
