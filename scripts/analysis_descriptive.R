@@ -76,7 +76,7 @@ stargazer(tab, summary = FALSE, type = "latex")
 
 
 ## 2011
-dfmainp2011_avg <- ddply(dfmainp2011[which(!is.na(dfmainp2011$linc)),], 
+dfmain2011_avg <- ddply(dfmain2011[which(!is.na(dfmainp2011$linc)),], 
                          .(grad_cohort, years_grad), summarise, linc_mean=mean(linc), N=sum(one))
 dfmainp2011_avg$grad_cohort <- as.factor(dfmainp2011_avg$grad_cohort)
 

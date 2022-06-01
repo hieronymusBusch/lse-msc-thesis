@@ -129,16 +129,12 @@ df1$grad_cohort <- ifelse(df1$t_1 == 1, df1$birth_cohort + 19, df1$birth_cohort 
 
 # how many years after graduation? 
 df1$years_grad <- df1$syear - df1$grad_cohort
-df1$years_grad2 <- ifelse(df1$t_1 == 1, df1$years_grad + 1, df1$years_grad)
 
 
 ## regression variables
-df1$years_grad_e2 <- df1$years_grad^2
-df1$years_grad2_e2 <- df1$years_grad2^2
 df1$inc <- ifelse(df1$inc < 0, NA, ifelse(df1$inc == 0, 1, df1$inc)) # change zeros in income to 1 ct (for logs)
-df1$inc2 <- ifelse(df1$inc2 < 0, NA, ifelse(df1$inc2 == 0, 1, df1$inc2)) # change zeros in income to 1 ct (for logs)
 df1$linc <- log(df1$inc) # set no income to 1 ct before logging
-df1$linc2 <- log(df1$inc2) # set no income to 1 ct before logging
+df1$hours3 <- ifelse(is.na(dfmain$linc), NA, dfmain$hours1) # hours only if income
 
 
 ## restricted samples for regressions
@@ -200,10 +196,22 @@ df1$phrf <- NULL
 #dfmain <- df1[which(df1$years_grad %in% c(1:8) & (df1$did2011 == 1 | df1$did2012 == 1)),] 
 dfmain <- df1[which(!is.na(df1$reg) & df1$years_grad %in% c(1:9) & 
                       !is.na(df1$unempl) & !is.na(df1$empl) & !is.na(df1$health) & 
-                      !is.na(df1$lifesat) & !is.na(df1$fullt)),]
+                      !is.na(df1$lifesat) & !is.na(df1$fullt) & 
+                      df1$years_grad < 8),] # EXCLUDE years 8 and 9 
 dfmainp2011 <- df1[which(df1$regp2011 == 1 & df1$years_grad > 0),]
 dfmainp2012 <- df1[which(df1$regp2012 == 1 & df1$years_grad > 0),]
 dfmainp2013 <- df1[which(df1$regp2013 == 1 & df1$years_grad > 0),]
+
+
+## Diff-in-Diff comparison as Robustness Check
+dfdd <- df1[which(
+  (df1$state %in% c("NW") & df1$grad_cohort %in% c(2011, 2012)) | # cohorts 2011 and 2012 from NRW
+  (df1$state %in% c("NI", "BY") & df1$grad_cohort %in% c(2011, 2012) & df1$t_1 == 1)  # cohorts 2011 (treated) and 2012 from NI / BY
+),]
+
+
+## Further years as Robustness Check
+dft1 <- df1[which(df1$state %in% statesReg2 & df1$t_1 == 1),]
 
 
 ## set environment to non-github to save files
@@ -216,6 +224,8 @@ save(dfmainp2011, file = here("SOEP/msc-thesis/dfmainp2011.Rda"))
 save(dfmainp2012, file = here("SOEP/msc-thesis/dfmainp2012.Rda"))
 save(dfmainp2013, file = here("SOEP/msc-thesis/dfmainp2013.Rda"))
 save(df1, file = here("SOEP/msc-thesis/df1.Rda"))
+save(dfdd, file = here("SOEP/msc-thesis/dfdd.Rda"))
+save(dft1, file = here("SOEP/msc-thesis/dft1.Rda"))
 
 
 
