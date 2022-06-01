@@ -17,15 +17,9 @@ here::i_am("scripts/analysis_regressions.R")
 ## read in data directly
 source(here::here("scripts/setup.R")) 
 
-# comp 1
 i_am("GitHub/lse-msc-thesis/scripts/analysis_regressions.R")
 load(here("SOEP/msc-thesis/dfmain.Rda"))
 load(here("SOEP/msc-thesis/df1.Rda"))  
-
-# comp 2
-#i_am("GitHub/lse-msc-thesis/scripts/analysis_regressions2.R")
-#load(here("SOEP/dfmain.Rda"))
-
 here::i_am("scripts/analysis_regressions.R") 
 
 
