@@ -132,7 +132,7 @@ df1$years_grad <- df1$syear - df1$grad_cohort
 ## regression variables
 df1$inc <- ifelse(df1$inc < 0, NA, ifelse(df1$inc == 0, 1, df1$inc)) # change zeros in income to 1 ct (for logs)
 df1$linc <- log(df1$inc) # set no income to 1 ct before logging
-df1$hours3 <- ifelse(is.na(dfmain$linc), NA, dfmain$hours1) # hours only if income
+df1$hours3 <- ifelse(is.na(df1$linc), NA, df1$hours1) # hours only if income
 
 
 ## restricted samples for regressions

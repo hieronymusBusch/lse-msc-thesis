@@ -13,7 +13,7 @@ here::i_am("scripts/analysis_descriptive.R")
 
 ## read in data directly
 source(here::here("scripts/setup.R")) 
-i_am("GitHub/lse-msc-thesis/scripts/analysis_descriptive2.R")
+i_am("GitHub/lse-msc-thesis/scripts/analysis_descriptive.R")
 load(here::here("SOEP/msc-thesis/dfmain.Rda"))
 load(here::here("SOEP/msc-thesis/dfmainp2011.Rda"))
 load(here::here("SOEP/msc-thesis/dfmainp2012.Rda"))
@@ -73,16 +73,17 @@ stargazer(tab, summary = FALSE, type = "latex")
 ## log income
 
 # 2011
-parallel_trends(data = dfmainp2011, variable = "linc", ylab = "Log monthly income", scale = 9)
+parallel_trends(data = dfmainp2011, variable = "linc", ylab = "Log monthly income", scale = 10)
 ggsave(here::here("plots/figure_parallel_linc_2011.pdf"), width = 14.2, height = 13.4, units = "cm")
 
 # 2012
-parallel_trends(data = dfmainp2012, variable = "linc", ylab = "Log monthly income", scale = 9)
+parallel_trends(data = dfmainp2012, variable = "linc", ylab = "Log monthly income", scale = 10)
 ggsave(here::here("plots/figure_parallel_linc_2012.pdf"), width = 14.2, height = 13.4, units = "cm")
 
 # 2013
-parallel_trends(data = dfmainp2013, variable = "linc", ylab = "Log monthly income", scale = 9)
+parallel_trends(data = dfmainp2013, variable = "linc", ylab = "Log monthly income", scale = 10)
 ggsave(here::here("plots/figure_parallel_linc_2013.pdf"), width = 14.2, height = 13.4, units = "cm")
+
 
 
 ## health
@@ -115,6 +116,21 @@ parallel_trends(data = dfmainp2013, variable = "lifesat", ylab = "Life satisfact
 ggsave(here::here("plots/figure_parallel_lifesat_2013.pdf"), width = 14.2, height = 13.4, units = "cm")
 
 
+## annual hours
+
+# 2011
+parallel_trends(data = dfmainp2011, variable = "hours3", ylab = "Annual Working Hours", scale = 3000)
+ggsave(here::here("plots/figure_parallel_hours_2011.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2012
+parallel_trends(data = dfmainp2012, variable = "hours3", ylab = "Annual Working Hours", scale = 3000)
+ggsave(here::here("plots/figure_parallel_hours_2012.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+# 2013
+parallel_trends(data = dfmainp2013, variable = "hours3", ylab = "Annual Working Hours", scale = 3000)
+ggsave(here::here("plots/figure_parallel_hours_2013.pdf"), width = 14.2, height = 13.4, units = "cm")
+
+
 
 ### summary statistics
 # sex, gebjahr, migback, ...
@@ -127,7 +143,6 @@ dfmain_sum1 <- dfmain_sum[which(dfmain_sum$t_1 == 1),]
 dfmain_sum2 <- dfmain_sum[which(dfmain_sum$t_1 == 0),]
 
 stargazer(dfmain_sum1, dfmain_sum2, summary = TRUE, omit.summary.stat = c("max","min"), type = "latex", digits = 2)
-
 
 
 ### Germany Map
@@ -153,16 +168,11 @@ ggplot(data = dfsp) +
   geom_sf(aes(alpha=study, fill=study)) +
   scale_fill_manual(values = c("#999999", "#666666", "#333333", "white")) +
   scale_alpha_manual(values=c(1,1,1,0)) +
-  theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
+  theme_void() + 
+  theme(text = element_text(size = 15, color = "black"), 
         legend.position = "bottom", legend.title = element_blank())
-ggsave(here::here("plots/map_sample.pdf"), width = 14.2, height = 13.4, units = "cm")
+ggsave(here::here("plots/map_sample.pdf"), width = 15, height = 25, units = "cm")
 
-# map for introduction
-ggplot(data = dfsp) +
-  geom_sf(aes(fill=first_cohort)) +
-  scale_fill_manual(values = c("#999999", "#666666", "#333333", "white")) +
-  theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
-        legend.position = "bottom", legend.title = element_blank())
 
 
 

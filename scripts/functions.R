@@ -24,13 +24,17 @@ parallel_trends <- function(data, variable, lags = 3, leads = 0, centre = 1, yla
     geom_line(aes(x=years_grad, y=mean_var, col = grad_cohort), size = 0.75) + 
     labs(y=ylab, x="Years after Graduation") +
     scale_x_continuous(limits = c(0,13.5), expand = c(0,0), breaks = c(1,3,5,7,9,11,13)) +
-    scale_y_continuous(limits = c(0,scale*1.1), expand = c(0,0), breaks = seq(1, scale, 2)) +
+    scale_y_continuous(limits = c(0,scale*1.1), expand = c(0,0), 
+                       breaks = c(scale/4, 2*scale/4, 3*scale/4, scale)) +
     scale_fill_manual(values = colors_ts) + # color interior
     scale_color_manual(values = colors_ts) + # color exterior
     theme_tufte() + 
     theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
           legend.position = "bottom", legend.title = element_blank())
 }
+
+
+#seq(1, scale, 2))
 
 # calculates for a list of data frames and a given variable two panel models (variying in controls)
 # and gives out a stargazer table 
@@ -40,19 +44,20 @@ panel_table <- function(list_df, variable, class, out = "latex"){
   # run loop that runs for each data frame two panel models, and combine output in data frame defined above
   list_cohorts <- c("Cohort = all", "Cohort = 2011", "Cohort = 2012", "Cohort = 2013")
   for(i in 1:length(list_df)){
-    df <- list_df[[i]]
+    df <- as.data.frame(list_df[[i]])
     df <- df[which(df$years_grad < 8 & !is.na(df[, variable])), ]
     # if continous, only use estimate and standard error
     if(class == "cont"){
-      fe_1 <- round(summary(felm(df[, variable] ~ t_1xyears | years_grad + pid | 0 | pid, 
+      fe_1 <- round(summary(felm(df[, variable] ~ t_1xyears | years_grad + pid + syear | 0 | pid, 
                                  df))$coefficients[1,c(1,2)], 2)
       fe_2 <- round(summary(felm(df[, variable] ~ t_1xyears | years_grad + pid + syear + cur_state | 0 | pid, 
                                  df))$coefficients[1,c(1,2)], 2)
     }else{ # logit case (use conditional logit model from survival package with same cases / controls)
-      fe_1 <- round(summary(clogit(df[, variable] ~ t_1xyears + factor(years_grad) + strata(pid), 
+      fe_1 <- round(summary(clogit(df[, variable] ~ t_1xyears + factor(years_grad) + 
+                                     strata(pid) + factor(syear),
                                    df))$coefficients[1,c(1,3)], 2)
-      fe_2 <- round(summary(clogit(df[, variable] ~ t_1xyears + factor(years_grad) + strata(pid)
-                                   + factor(syear) + factor(cur_state), 
+      fe_2 <- round(summary(clogit(df[, variable] ~ t_1xyears + factor(years_grad) + 
+                                     strata(pid) + factor(syear) + factor(cur_state),
                                    df))$coefficients[1,c(1,3)], 2)
     }
     df1 <- data.frame(Data = c(list_cohorts[i], paste0("N = ", sum(df$one))), 
