@@ -78,13 +78,6 @@ df_empl <- panel_table(list_df, variable = "empl", class = "binary", out = "df")
 df_binary <- cbind(df_edu, df_empl[, c(2,3)])
 stargazer(df_binary, type = "latex", summary = FALSE)
 
-
-
-
-
-
-
-
-
+    
 
 

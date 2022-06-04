@@ -91,17 +91,34 @@ cross_section_plot <- function(data = dfmain, variable, ylab, scale, class){
   }
   names(df) <- c("error", "Estimate", "Year")
   # plot coefficients
-  ggplot(data=df, aes(x=Year, y=Estimate)) +
-    geom_line(aes(x=Year, y=Estimate), size = 0.75) + 
-    geom_hline(yintercept = 0, linetype = "dashed", size = 0.75) + 
-    geom_ribbon(aes(ymin=Estimate + error, ymax=Estimate - error), alpha=0.5, fill = "grey", 
-                linetype = "blank") +
-    labs(y=ylab, x="Years after Graduation") +
-    scale_x_continuous(limits = c(0.5,7.5), expand = c(0,0), breaks = c(1:7)) +
-    scale_y_continuous(limits = c(-scale,scale), expand = c(0,0), breaks = c(-scale,-0.5*scale,0,0.5*scale,scale)) +
-    theme_tufte() + 
-    theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
-          legend.position = "bottom", legend.title = element_blank())
+  if(class == "cont"){
+    ggplot(data=df, aes(x=Year, y=Estimate)) +
+      geom_line(aes(x=Year, y=Estimate), size = 0.75) + 
+      geom_hline(yintercept = 0, linetype = "dashed", size = 0.75) + 
+      geom_ribbon(aes(ymin=Estimate + error, ymax=Estimate - error), alpha=0.5, fill = "grey", 
+                  linetype = "blank") +
+      labs(y=ylab, x="Years after Graduation") +
+      scale_x_continuous(limits = c(0.5,7.5), expand = c(0,0), breaks = c(1:7)) +
+      scale_y_continuous(limits = c(-scale,scale), expand = c(0,0), breaks = c(-scale,-0.5*scale,0,0.5*scale,scale)) +
+      theme_tufte() + 
+      theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
+            legend.position = "bottom", legend.title = element_blank())
+  }else{
+    ggplot(data=df, aes(x=Year, y=Estimate)) +
+      geom_line(aes(x=Year, y=Estimate), size = 0.75) + 
+      geom_hline(yintercept = 0, linetype = "dashed", size = 0.75) + 
+      geom_ribbon(aes(ymin=Estimate + error, ymax=Estimate - error), alpha=0.5, fill = "grey", 
+                  linetype = "blank") +
+      labs(y=ylab, x="Years after Graduation") +
+      scale_x_continuous(limits = c(0.5,7.5), expand = c(0,0), breaks = c(1:7)) +
+      scale_y_continuous(limits = c(-scale,scale), expand = c(0,0), breaks = c(-scale,-0.5*scale,0,0.5*scale,scale),
+                         sec.axis = sec_axis(~ exp(.), name = "Likelihood", # define second axis for likelihood 
+                                             breaks = c(exp(-scale),exp(-0.5*scale),1,exp(0.5*scale),exp(scale)), 
+                                             labels = scales::number_format(accuracy = 0.1))) +
+      theme_tufte() + 
+      theme(axis.line = element_line(size = 0.75), text = element_text(size = 15, color = "black"), 
+            legend.position = "bottom", legend.title = element_blank())
+  }
 }
 
 # plot raw difference in shares between treatment and control
