@@ -80,7 +80,7 @@ cross_section_plot <- function(data = dfmain, variable, ylab, scale, class){
   # create data frame of estimates (and standard errors)
   for(i in 1:7){
     dfyear <- data[data$years_grad == i, ]
-    model <- paste0(variable, " ~ t_1 + factor(state) + factor(syear) + sex + mig + gebjahr + factor(cur_state)")
+    model <- paste0(variable, " ~ t_1 + factor(syear) + sex + mig + gebjahr")
     if(class == "cont"){
       effect <- as.data.frame(t(summary(lm(model, dfyear))$coefficients[2,c(2,1)]))
     }else{
